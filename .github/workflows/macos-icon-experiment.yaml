@@ -1,0 +1,75 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: macOS native icon experiment
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'experiments/macos-native-icons/**'
+      - '.github/workflows/macos-icon-experiment.yaml'
+
+permissions:
+  contents: read
+
+jobs:
+  compile-icon:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Compile Icon Composer source
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          mkdir -p "$RUNNER_TEMP/icon-build"
+          xcrun actool "$GITHUB_WORKSPACE/experiments/macos-native-icons/netbeans.icon" \
+            --compile "$RUNNER_TEMP/icon-build" \
+            --platform macosx --minimum-deployment-target 11.0 \
+            --app-icon netbeans --include-all-app-icons \
+            --output-partial-info-plist "$RUNNER_TEMP/icon-build/partial.plist"
+          test -s "$RUNNER_TEMP/icon-build/Assets.car"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: netbeans-icon-catalog
+          path: ${{ runner.temp }}/icon-build/
+          if-no-files-found: error
+
+  compile-launcher:
+    strategy:
+      matrix:
+        os: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Compile experimental launcher
+        run: |
+          clang -Wall -Wextra -Werror -fobjc-arc -mmacosx-version-min=11.0 \
+            -framework Foundation experiments/macos-native-icons/launcher.m \
+            -o "$RUNNER_TEMP/nbpackage-native-icon"
+          xcrun vtool -show-build "$RUNNER_TEMP/nbpackage-native-icon"
+          python3 experiments/macos-native-icons/prepare.py --help
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-launcher-${{ matrix.os }}
+          path: ${{ runner.temp }}/nbpackage-native-icon
+          if-no-files-found: error
