@@ -11,6 +11,18 @@
       "hidden" : false,
       "layers" : [
         {
+          "blend-mode-specializations" : [
+            {
+              "appearance" : "tinted",
+              "value" : "normal"
+            }
+          ],
+          "fill-specializations" : [
+            {
+              "appearance" : "tinted",
+              "value" : "automatic"
+            }
+          ],
           "glass-specializations" : [
             {
               "value" : false
@@ -30,7 +42,7 @@
           "opacity-specializations" : [
             {
               "appearance" : "tinted",
-              "value" : 0.85
+              "value" : 1
             }
           ],
           "position" : {

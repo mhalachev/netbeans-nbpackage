@@ -36,22 +36,33 @@ rather than append JVM options a second time.
 
 ## Local result and limits
 
-The initial prototype successfully opened Apache NetBeans 31 with the expected
-native dark icon on macOS 27.2.1. The ordinary shell launcher in 
-`Contents/Resources/netbeans/bin/netbeans` was restored before this
-successful test; the in-process launcher bypassed it. No NetBeans JAR or JDK
-modifications were needed.
+Local testing reported by the contributor:
 
-This demonstrates feasibility, not release readiness. Intel runtime testing and
-pre-macOS-26 testing are pending. Compiling with a macOS 11.0 deployment target
-only removes a binary version restriction; it does not establish compatibility.
-The bundled runtime must itself support the destination OS and architecture.
-The original ICNS and `CFBundleIconFile` remain present. Catalog fallback needs
-visual testing on older systems.
+| System | Result |
+| --- | --- |
+| Apple Silicon, macOS 27.2.1, NetBeans 31 | IDE remains running with the native icon in Light, Dark, Clear and Tinted appearances. |
+| Intel, macOS Sequoia 15.7.2 | IDE works as expected with the legacy static icon. |
 
-The checked-in source below generalizes the original local prototype and must
-also be visually retested. In particular, changing the launcher affects much
-more than icons:
+The ordinary shell launcher in `Contents/Resources/netbeans/bin/netbeans` was
+restored before the original successful test; the in-process launcher bypassed
+it. No NetBeans JAR or JDK modifications were needed.
+
+The following composition contains real Dock screenshots on macOS 27.2.1:
+colored/dark, clear monochrome, and yellow tinted appearances from left to right.
+The updated icon uses 100% foreground opacity in Mono (the `tinted` specialization
+in the source), instead of 85%, to keep the lower outline visible.
+
+![NetBeans running in three Dock appearances](screenshots/dock-appearances.png)
+
+This demonstrates feasibility, not release readiness. macOS 26 remains untested,
+as do other OS/architecture combinations beyond the two reported above.
+Compiling with a macOS 11.0 deployment target only removes a binary version
+restriction; it does not establish compatibility. The bundled runtime must
+itself support the destination OS and architecture. The original ICNS and
+`CFBundleIconFile` remain present; the Intel/Sequoia test confirmed the expected
+legacy icon appearance on that system.
+
+Changing the launcher affects much more than icons:
 
 - The helper currently supports the IDE's single-line `netbeans_default_options`
   format and bundled JDK layout only. It rejects unexpanded shell expressions.
@@ -76,7 +87,8 @@ do not assert GUI startup or icon correctness.
 
 The `netbeans.icon` source is the Icon Composer document supplied in
 [the discussion attachment](https://github.com/user-attachments/files/21533584/netbeans.zip),
-including the NetBeans logo SVG. This is an experimental design, not an adopted
+including the NetBeans logo SVG, with subsequent Mono appearance adjustments.
+This is an experimental design, not an adopted
 replacement for the shipping logo.
 
 To compile locally with full Xcode and Icon Composer support:
@@ -117,5 +129,5 @@ profile reside under `~/Library/Application Support/NBPackage Native Icon Experi
 The launcher does not set a minimum-version plist key on behalf of the runtime.
 
 Before production integration, test at least macOS 15 and 26 on Apple Silicon,
-Intel startup and fallback appearance, all Tahoe icon appearances, argument and
+additional Intel/older-system combinations, all Tahoe icon appearances, argument and
 configuration handling, restarts, updates, file opening, and release signing.
